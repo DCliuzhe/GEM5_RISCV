@@ -33,7 +33,7 @@ import m5
 from m5.object inmport *
 ```
 <a name="pZAZK"></a>
-## 创建系统以及系统时钟域
+## Step 1: 创建系统以及系统时钟域
 利用System类创建system对象，所有的系统组件的父类均为System，可以用它创建系统的时钟域，下面给出一个创建简单时钟域并指定时钟域的时钟频率和电压域的例子：
 ```python
 system = System()
@@ -44,14 +44,14 @@ system.clk_domain.voltage_domain = VoltageDomain()
 ```
 时钟域还有其他选择，例如DerivedClockDomian()，即派生时钟域，可以从另一个系统时钟域派生过来，二者时钟频率可以不同。另外每一个时钟域内要指定一个电压域，这里使用VoltageDomain初始化，默认值为1V。<br />具体类的代码实现可以在/src/sim文件夹下找到。
 <a name="DTOER"></a>
-## 设置系统内存
+## Step 2: 设置系统内存
 系统内存设置至少需要指定两个参数，系统内存模式和系统的内存地址范围：mem_mode与mem_ranges。<br />系统内存模式分为四类："timing", "ideal", "atomic"以及“atomic_nocaching"<br />`timing`： 精确模拟每个内存操作的时序行为，包括延迟、总线争用等，适用于详细的性能分析。  <br />`invalid`：  这是一个占位符模式，表示当前内存模式无效或未设置。    <br />`atomic`： 每个内存操作在一次调用中完成，不模拟实际的时序延迟，适用于快速功能模拟。  <br />`atomic_nocaching` ： 类似于 `atomic`模式，但不进行缓存，直接与主存通信。  <br />![image.png](https://cdn.nlark.com/yuque/0/2024/png/28537930/1722395973163-58b6158c-9e08-4cb8-8c2d-cee5d65724f3.png#averageHue=%23252220&clientId=ub7dfa964-ab34-4&from=paste&height=66&id=u4f01640d&originHeight=57&originWidth=530&originalType=binary&ratio=1.75&rotation=0&showTitle=false&size=4811&status=done&style=none&taskId=ua59c8c35-a115-4dc5-b7cd-30bb97e10aa&title=&width=613.8571472167969)<br />mem_ranges则是直接指定大小即可（需要带单位）。下面给出设置timing内存模式，地址空间为512MB例子：
 ```python
 system.mem_mode = 'timing'
 system.mem_ranges = [AddrRange('512MB')]
 ```
 <a name="FQduA"></a>
-## 设置系统CPU
+## Step 3: 设置系统CPU
 系统cpu设置需要指定system.cpu参数，可选的CPU类型如下：<br />`AtomicSimpleCPU`： 一种原子模式 CPU 模型，不模拟实际的时序延迟，适用于快速功能模拟。  <br />`NonCachingSimpleCPU`： 一种简单的 CPU 模型，它不使用缓存，而是直接与内存进行交互。  <br />`O3CPU`： 一种复杂的乱序执行 CPU 模型，模拟现代处理器的行为，适用于详细的性能分析和架构研究。  <br />`MinorCPU`： 一种简化的乱序执行 CPU 模型，适用于中等复杂度的性能分析。  <br />`TimingSimpleCPU`： 一种简单的时序 CPU 模型，它并不模拟复杂的流水线结构。  <br />![image.png](https://cdn.nlark.com/yuque/0/2024/png/28537930/1722395940949-b97d5cc5-8eec-4fbe-a3c0-d496a44424f3.png#averageHue=%23222120&clientId=ub7dfa964-ab34-4&from=paste&height=496&id=uf3f642b9&originHeight=868&originWidth=859&originalType=binary&ratio=1.75&rotation=0&showTitle=false&size=100456&status=done&style=none&taskId=uc058187d-59bf-4e77-a6fe-9c0732bb4fb&title=&width=490.85714285714283)<br />下面给出设置RISCV，TimingSimpleCPU的示例：
 ```python
 system.cpu = RiscvTimingSimpleCPU()
@@ -59,7 +59,7 @@ system.cpu = RiscvTimingSimpleCPU()
 > 设置CPU时，默认是64位
 
 <a name="H8Bnc"></a>
-## 设置系统内存总线
+## Step 4: 设置系统内存总线
 系统内存总线有两大类，分别是CoherentXBar和NonconherentXBar，二者均继承自父类BaseXBar，最基本的两个端口是cpu_side_ports和mem_side_ports。<br />![image.png](https://cdn.nlark.com/yuque/0/2024/png/28537930/1722397369713-ea30f582-623e-4d54-a459-a3a6548198bf.png#averageHue=%23242220&clientId=ub7dfa964-ab34-4&from=paste&height=199&id=u0a7ce65c&originHeight=348&originWidth=586&originalType=binary&ratio=1.75&rotation=0&showTitle=false&size=27624&status=done&style=none&taskId=u66c1c87b-b6ae-4574-900a-b12490e0be6&title=&width=334.85714285714283)<br />基于CoherentXBar派生出SystemXBar和L2XBar，基于NoncoherentXBar派生出IOXBar。<br />`SystemXBar`： 是一个通用的交叉开关总线，主要用于连接 CPU、内存控制器、缓存和其他系统级设备。  <br />`L2XBar`： 是一个专用于二级缓存（L2 Cache）的交叉开关总线。它连接多个一级缓存（L1 Cache）和二级缓存，处理缓存层次结构中的数据传输。  <br />`IOXBar`： 一个专用于输入输出设备的交叉开关总线。它处理系统中的外设和 I/O 设备之间的通信。  <br />下面给出使用SystemBar的例子：
 ```python
 system.membus = SystemXBar()
@@ -68,13 +68,13 @@ system.cpu.icache_port = system.membus.cpu_side_ports
 system.cpu.dcache_port = system.membus.cpu_side_ports
 ```
 <a name="xTbg5"></a>
-## 设置系统中断控制器
+## Step 5: 设置系统中断控制器
  创建并配置一个中断控制器（Interrupt Controller）来管理和处理 CPU 的中断请求。示例如下：
 ```python
 system.cpu.createInterruptController()
 ```
 <a name="CfcDq"></a>
-## 设置系统内存控制器
+## Step 6: 设置系统内存控制器
 
 1. 先为系统初始化一个MemCtrl
 2. 可以指定mem_ctrl连接的DRAM模型，GEM5提供了部分DRAM模型的接口，并定义了DRAM模型参数，接口文件路径为/mem/src/DRAMInterface.py。
