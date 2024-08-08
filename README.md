@@ -98,7 +98,39 @@ system.mem_ctrl.port = system.membus.mem_side_ports
 <a name="UxWEp"></a>
 ## Cache的使用
 有关Cache的使用，可以关注Basic_Test文件目录下的`simple_withCache.py`和`test_Cache.py`两个文件。`test_Cache.py`从Cache类派生出实验所需的L1 Cache和L2 Cache两种类，并进一步从L1 Cache派生出L1ICache和L1DCache用于本次实验。`simple_withCache.py`将test_Cache中的类引入，并搭建了一个具有L1，L2两级Cache的处理器，如下图所示：<br />![image.png](https://cdn.nlark.com/yuque/0/2024/png/28537930/1722927314911-52e37e7a-49de-4764-aca7-ed9919e5bfc1.png#averageHue=%23e2e2e2&clientId=u427b6683-7037-4&from=paste&height=905&id=GWuIv&originHeight=1583&originWidth=1184&originalType=binary&ratio=1.399999976158142&rotation=0&showTitle=false&size=113738&status=done&style=none&taskId=u2f7f92f6-2063-41e1-8d8f-92be6983232&title=&width=676.5714285714286)<br />simple_nocache.txt和simple_cache.txt给出了运行在有Cache和无Cache架构下测试一个16×16GEMM Kernel的stats数据。
+<a name="WaDQ8"></a>
+# GEM5的RVV支持
+这部分需要分成两部分进行讨论，即RISC-V交叉编译器（gcc）和GEM5分别对RVV的支持。
+<a name="dbAz1"></a>
+## RISC-V Toolchain的编译与使用
+riscv-gnu-toolchain中gcc支持版本为13.2，此版本对RVV0.7支持，对RVV Intrinsic支持到1.0。<br />关于toolchain的编译参考：[riscv-collab/riscv-gnu-toolchain: GNU toolchain for RISC-V, including GCC (github.com)](https://github.com/riscv-collab/riscv-gnu-toolchain)（请记得将编译好的二进制文件目录加入到环境变量中）<br />使用toolchain的gcc对程序进行编译：
+```bash
+riscv64-unknown-elf-gcc -march=rv64gcv -mabi=lp64d your_program.c -o program_name
+```
+`**-march=rv64gcv**`:
 
+- `**rv64**`: 表示 RISC-V 64 位架构。
+- `**g**`: 表示基本指令集（G，是“general”的缩写），包括整数、乘法、原子操作、浮点数（单精度和双精度）等扩展。
+- `**c**`: 表示压缩指令集扩展（compressed），用于减少指令的大小，从而减小代码的存储空间和提升执行效率。
+- `**v**`: 表示向量指令集扩展（vector），用于高效执行矢量运算
+
+`**-mabi=lp64d**`:
+
+- `**l**`: 表示 long 类型数据占 64 位（8 字节）。
+- `**p**`: 表示指针类型数据占 64 位（8 字节）。
+- `**64**`: 表示 64 位架构。
+- `**d**`: 表示双精度浮点数 ABI（Application Binary Interface，应用二进制接口），即使用双精度浮点数进行参数传递和返回值处理。
+<a name="gmsuG"></a>
+## GEM5的RVV支持
+GEM5则直接支持最新的RVV1.0，并且支持用户对`vlen`做自定义修改，修改方式如下：
+```python
+import m5
+from m5.objects import RiscvISA
+...
+system.cpu.isa = RiscvISA(vlen = xxx)
+...
+```
+其中`vlen`的默认大小为256。
 
 
 
