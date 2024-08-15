@@ -1,18 +1,19 @@
 import m5
 from m5.objects import *
-from test_cache import *
+from C910_Cache import *
+from lpddr4 import *
 
 system = System()
 
 system.clk_domain = SrcClockDomain()
-system.clk_domain.clock = '2GHz'
+system.clk_domain.clock = '1.85GHz'
 system.clk_domain.voltage_domain = VoltageDomain()
 
 system.mem_mode = 'timing'
-system.mem_ranges = [AddrRange('8GB')]
+system.mem_ranges = [AddrRange('16GB')]
 
 system.cpu = RiscvO3CPU()
-system.cpu.isa = RiscvISA(vlen = 512)
+system.cpu.isa = RiscvISA(vlen = 128)
 
 system.membus = SystemXBar()
 
@@ -21,7 +22,7 @@ system.cpu.dcache = L1DCache()
 system.cpu.icache.connectCPU(system.cpu)
 system.cpu.dcache.connectCPU(system.cpu)
 
-system.l2bus = L2XBar(width = 16)
+system.l2bus = L2XBar()
 system.cpu.icache.connectBus(system.l2bus)
 system.cpu.dcache.connectBus(system.l2bus)
 
@@ -32,11 +33,11 @@ system.l2cache.connectMemSideBus(system.membus)
 
 system.cpu.createInterruptController()
 system.mem_ctrl = MemCtrl()
-system.mem_ctrl.dram = DDR3_1600_8x8()
+system.mem_ctrl.dram = LPDDR4X_3733_4x8()
 system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.mem_side_ports
 
-binary = './kernel/gemm_rvv_v2'
+binary = './kernel/gemm_v2'
 
 system.workload = SEWorkload.init_compatible(binary)
 
