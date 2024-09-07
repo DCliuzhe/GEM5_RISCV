@@ -37,7 +37,7 @@ system.mem_ctrl.dram = LPDDR4X_3733_4x8()
 system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.mem_side_ports
 
-binary = './kernel/gemm_v2'
+binary = './kernel/gemm_rvv_v2'
 
 system.workload = SEWorkload.init_compatible(binary)
 
